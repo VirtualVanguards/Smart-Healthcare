@@ -6,8 +6,8 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.resnet_v2 import preprocess_input
-import contextlib
-import io
+import requests
+from io import BytesIO
 
 # Set the training directory path
 train_dir = 'data/dataset/splits/train'
@@ -16,7 +16,11 @@ train_dir = 'data/dataset/splits/train'
 disease_names = sorted(os.listdir(train_dir))
 
 def load_image(img_path):
-    img = image.load_img(img_path, target_size=(224, 224))
+    if img_path.startswith('http'):
+        response = requests.get(img_path)
+        img = image.load_img(BytesIO(response.content), target_size=(224, 224))
+    else:
+        img = image.load_img(img_path, target_size=(224, 224))
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     img_array = preprocess_input(img_array)
@@ -28,8 +32,7 @@ def predict(image_path):
         img_array = load_image(image_path)
 
         # Suppress TensorFlow progress bar
-        with contextlib.redirect_stdout(io.StringIO()):
-            predictions = model.predict(img_array)
+        predictions = model.predict(img_array)
         
         decoded_predictions = np.argmax(predictions, axis=1)
 
