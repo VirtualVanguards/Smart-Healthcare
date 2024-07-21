@@ -7,5 +7,4 @@ public/uploads
 venv
 .env
 ProjectStructure.md
-vercel.json
 Procfile
